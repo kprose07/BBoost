@@ -1,0 +1,98 @@
+
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: #f8f9fa;
+}
+
+.tab-pane {
+    -fx-tab-min-width: 120px;
+    -fx-tab-max-width: 180px;
+    -fx-tab-min-height: 30px;
+}
+
+.tab {
+    -fx-background-color: #FFFFFF;
+	
+}
+
+.button {
+    -fx-background-color: #632116;
+	-fx-color: #FFFFFF;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10px;
+	
+}
+
+.button:hover {
+    -fx-background-color: #FFF;
+	-fx-border-color: #632116;
+	-fx-border-radius: 6px;
+ -fx-text-fill: #632116;
+	
+}
+
+.label {
+    -fx-text-fill: #333;
+    -fx-font-size: 14px;
+}
+
+.text-area {
+    -fx-border-color: #000;
+    -fx-border-radius: 6px;
+    -fx-padding: 6px;
+    -fx-background-color: white;
+	-fx-font-family: "Happy Monkey";
+}
+.pop-up {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0.2, 2, 2);
+    -fx-background-color: #FFF34C;
+    -fx-padding: 10px;
+    -fx-font-size: 14px;
+    -fx-text-fill: #000000; /* Optional: text color */
+}
+
+.affirmation-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+}
+.checkin-popup {
+    -fx-background-color: #FFF14F;
+    -fx-border-color: #E0C100;
+    -fx-border-width: 2px;
+    -fx-border-radius: 2px;
+    -fx-background-radius: 2px;
+    -fx-padding: 20px;
+    -fx-alignment: center;
+    -fx-spacing: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 8, 0.2, 2, 2);
+}
+
+.emoji-button {
+    -fx-font-size: 28px;
+    -fx-padding: 10px;
+    -fx-background-color: white;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.1, 1, 1);
+}
+
+.checkin-date {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.saved-checkin-label {
+    -fx-background-color: #FFF8B0;
+    -fx-border-radius: 8px;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+    -fx-wrap-text: true;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 2, 0.2, 1, 1);
+}
+
