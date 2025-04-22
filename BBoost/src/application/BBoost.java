@@ -16,10 +16,14 @@ import javafx.geometry.Pos;
 import javafx.stage.StageStyle;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-
+import java.util.Date;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import javafx.geometry.Insets;
 
 public class BBoost extends Application {
     private final Random random = new Random();
@@ -37,6 +41,10 @@ public class BBoost extends Application {
     private ComboBox<String> timeComboBox = new ComboBox<>();
     private ComboBox<String> colorComboBox = new ComboBox<>();
     private Tab preferencesTab;
+    private VBox journalTemplatesVBox = new VBox(10);
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private Map<String, List<String>> journalTemplates = new HashMap<>();
+
 
     private final List<Runnable> popupSequence = new ArrayList<>();
     private int popupIndex = 0;
@@ -102,7 +110,7 @@ public class BBoost extends Application {
 
             VBox affirmationLayout = new VBox(10, clearAffirmationsButton, affirmationVBox);
             VBox checkInLayout = new VBox(10, clearCheckInsButton, checkInVBox);
-            VBox journalLayout = new VBox(10, clearJournalsButton, journalVBox);
+            VBox journalLayout = new VBox(10, clearJournalsButton,journalVBox, new Label("Journal Templates:"), journalTemplatesVBox);
 
             notesTab.setContent(affirmationLayout);
             checkInTab.setContent(checkInLayout);
@@ -125,6 +133,9 @@ public class BBoost extends Application {
             updateCheckInTab();
             updateJournalTab();
             updateAffirmationTab();
+            initializeJournalTemplates();
+            loadJournalTemplates();
+
 
             
         
@@ -471,6 +482,89 @@ public class BBoost extends Application {
 
     private static class Delta {
         double x, y;
+    }
+    private void initializeJournalTemplates() {
+        journalTemplates.put("Instant Cheer Up", Arrays.asList(
+                "What are you grateful for?",
+                "What did you enjoy today?",
+                "What are you planning for the future?",
+                "What do people like about you?",
+                "Write down a compliment you’d give to yourself.",
+                "What’s one thing that always brings you joy, no matter how small?",
+                "Write about a time when you laughed so hard it hurt. What made it so funny?",
+                "What compliments do you like to receive from others?"
+        ));
+
+        journalTemplates.put("Gratitude Entry", Arrays.asList(
+                "List three things that you are grateful for:",
+                "When was the last time you gave to someone that in turn made you feel grateful?"
+        ));
+
+        journalTemplates.put("Morning Reflection", Arrays.asList(
+                "How do you feel?",
+                "Why do you feel this way?",
+                "What will you do today?",
+                "What are you looking forward to?",
+                "What is one easy task that you'd like to accomplish today?",
+                "Take 10 minutes to meditate!",
+                "Write about the dream you had last night!"
+        ));
+
+        journalTemplates.put("Letting Go of Worries", Arrays.asList(
+                "What worries you?",
+                "How would an outsider see it?",
+                "What can be the positive outcome?",
+                "What are some things you can let go of that aren't helping you?"
+        ));
+    }
+
+    private void loadJournalTemplates() {
+        journalTemplatesVBox.getChildren().clear();
+        for (Map.Entry<String, List<String>> entry : journalTemplates.entrySet()) {
+            String templateName = entry.getKey();
+            List<String> questions = entry.getValue();
+
+            Button templateButton = new Button(templateName);
+            templateButton.setOnAction(e -> showJournalTemplatePopup(templateName, questions));
+            journalTemplatesVBox.getChildren().add(templateButton);
+        }
+    }
+
+    private void showJournalTemplatePopup(String title, List<String> questions) {
+        Stage popup = new Stage();
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(10));
+
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        vbox.getChildren().add(titleLabel);
+
+        List<TextArea> textAreas = new ArrayList<>();
+
+        for (String question : questions) {
+            Label questionLabel = new Label(question);
+            TextArea answerArea = new TextArea();
+            answerArea.setWrapText(true);
+            vbox.getChildren().addAll(questionLabel, answerArea);
+            textAreas.add(answerArea);
+        }
+
+        Button saveButton = new Button("Save Journal");
+        saveButton.setOnAction(e -> {
+            StringBuilder entry = new StringBuilder(title + ":\n");
+            for (int i = 0; i < questions.size(); i++) {
+                entry.append(questions.get(i)).append("\n").append(textAreas.get(i).getText()).append("\n\n");
+            }
+            saveJournal(entry.toString().trim());
+            updateJournalTab();
+            popup.close();
+        });
+
+        vbox.getChildren().add(saveButton);
+        Scene scene = new Scene(new ScrollPane(vbox), 400, 500);
+        popup.setScene(scene);
+        popup.setTitle(title);
+        popup.show();
     }
 
     private void showJournalPopup(Runnable onClose) {
