@@ -1,0 +1,3 @@
+Frequency=Daily
+Time=Morning
+Color=Purple
