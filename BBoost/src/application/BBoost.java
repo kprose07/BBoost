@@ -32,7 +32,7 @@ public class BBoost extends Application {
     private VBox checkInVBox = new VBox(10);
     private VBox journalVBox = new VBox(10);
     private VBox affirmationVBox = new VBox(10);
-
+    private VBox dashboardLayout = new VBox(20);
     private ComboBox<String> frequencyComboBox = new ComboBox<>();
     private ComboBox<String> timeComboBox = new ComboBox<>();
     private ComboBox<String> colorComboBox = new ComboBox<>();
@@ -84,6 +84,7 @@ public class BBoost extends Application {
 
             TabPane tabPane = new TabPane();
             Tab dashboardTab = new Tab("Dashboard");
+            setupDashboardTab(dashboardTab);
             Tab notesTab = new Tab("Notes (Affirmations)");
             Tab checkInTab = new Tab("Check-Ins");
             Tab journalTab = new Tab("Journals");
@@ -106,7 +107,7 @@ public class BBoost extends Application {
             notesTab.setContent(affirmationLayout);
             checkInTab.setContent(checkInLayout);
             journalTab.setContent(journalLayout);
-            dashboardTab.setContent(new StackPane());
+            dashboardTab.setContent(dashboardLayout);
             reportsTab.setContent(new StackPane());
 
             setupPreferencesTab();
@@ -117,7 +118,7 @@ public class BBoost extends Application {
             Scene scene = new Scene(tabPane, 800, 600);
             scene.getStylesheets().add(getClass().getResource("/styles/index.css").toExternalForm());
 
-            primaryStage.setTitle("Bannan Boost");
+            primaryStage.setTitle("Banana Boost");
             primaryStage.setScene(scene);
             primaryStage.show();
 
@@ -161,7 +162,66 @@ public class BBoost extends Application {
             }
         }
     }
+    private void setupDashboardTab(Tab dashboardTab) {
+        dashboardLayout.setPadding(new Insets(20));
+        dashboardLayout.setAlignment(Pos.TOP_CENTER);
+        
+        dashboardTab.setContent(dashboardLayout);
 
+
+        Label titleLabel = new Label("Welcome to Banana Boost!");
+        titleLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+
+        Label affirmationCountLabel = new Label();
+        Label checkInCountLabel = new Label();
+        Label journalCountLabel = new Label();
+        Label lastMoodLabel = new Label();
+        Label lastJournalLabel = new Label();
+
+        Button refreshButton = new Button("Refresh Dashboard");
+        refreshButton.setOnAction(e -> {
+            affirmationCountLabel.setText("Total Affirmations: " + countLinesInFile(AFFIRMATIONS_FILE));
+            checkInCountLabel.setText("Total Check-Ins: " + countLinesInFile(CHECKINS_FILE));
+            journalCountLabel.setText("Total Journals: " + countLinesInFile(JOURNALS_FILE));
+
+            lastMoodLabel.setText("Latest Mood: " + getLastLineFromFile(CHECKINS_FILE));
+            lastJournalLabel.setText("Latest Journal: " + getLastLineFromFile(JOURNALS_FILE));
+        });
+
+        refreshButton.fire();
+
+        dashboardLayout.getChildren().addAll(
+            titleLabel, 
+            affirmationCountLabel, 
+            checkInCountLabel, 
+            journalCountLabel,
+            lastMoodLabel,
+            lastJournalLabel,
+            refreshButton
+        );
+
+    }
+
+    private int countLinesInFile(String fileName) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            return (int) reader.lines().count();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    private String getLastLineFromFile(String fileName) {
+        String lastLine = "N/A";
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lastLine = line;
+            }
+        } catch (IOException e) {
+            // handle error
+        }
+        return lastLine;
+    }
     private void setupPreferencesTab() {
         frequencyComboBox.getItems().addAll("Daily", "Every Other Day", "Weekly");
         frequencyComboBox.setValue("Daily");
@@ -276,6 +336,8 @@ public class BBoost extends Application {
         repeatCycle.setCycleCount(Timeline.INDEFINITE);
         repeatCycle.play();
     }
+    
+
 
     private void showPopupsInSequence() {
         // Show the first popup in the sequence
@@ -505,4 +567,7 @@ public class BBoost extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+    
+
+
 }
