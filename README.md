@@ -38,7 +38,4 @@ You can download the latest BB Boost `.jar` file from the following link:
 
 ### 2. Open a Terminal/Command Prompt
 
-Navigate to the directory where the JAR file is downloaded. For example:
-
-```bash
-cd Downloads
+Navigate to the directory where the JAR file is downloaded and run.
