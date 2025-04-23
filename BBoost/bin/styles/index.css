@@ -59,23 +59,20 @@
     -fx-background-radius: 10px;
 }
 
-/* CHECK-IN STYLES */
 .checkin-popup {
-    -fx-background-color: #fff14f;
-    -fx-border-color: #e0c100;
+    -fx-background-color: #FFF14F;
+    -fx-border-color: #E0C100;
     -fx-border-width: 2px;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-padding: 25px;
-    -fx-spacing: 12px;
+    -fx-border-radius: 2px;
+    -fx-background-radius: 2px;
+    -fx-padding: 20px;
+    -fx-alignment: center;
+    -fx-spacing: 10px;
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 8, 0.2, 2, 2);
 }
-
 .checkin-popupW {
-    -fx-background-color: #fff14f;
+    -fx-background-color: #FFF14F;
 }
-
-/* EMOJIS */
 .emoji-button {
     -fx-font-size: 28px;
     -fx-padding: 10px;
@@ -86,7 +83,6 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.1, 1, 1);
 }
 
-/* CHECKIN LABELS */
 .checkin-date {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
@@ -94,17 +90,20 @@
 }
 
 .saved-checkin-label {
-    -fx-background-color: #fff14f;
-    -fx-border-color: #e0c100;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-padding: 20px;
-    -fx-spacing: 12px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 8, 0.2, 2, 2);
-    -fx-font-size: 14px;
-    -fx-wrap-text: true;
+	-fx-background-color: #FFF14F;
+	-fx-border-color: #E0C100;
+	-fx-border-width: 2px;
+	-fx-border-radius: 2px;
+	-fx-background-radius: 2px;
+	-fx-padding: 20px;
+	-fx-alignment: center;
+	-fx-spacing: 10px;
+	-fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 8, 0.2, 2, 2);
+	
+	
 }
+
+
 
 /* JOURNAL BUTTONS */
 .jbtn {

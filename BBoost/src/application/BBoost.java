@@ -259,7 +259,7 @@ public class BBoost extends Application {
         return lastLine;
     }
     private void setupPreferencesTab() {
-        frequencyComboBox.getItems().addAll("Daily", "Every Other Day", "Weekly");
+        frequencyComboBox.getItems().addAll("Minute","Daily", "Every Other Day", "Weekly");
         frequencyComboBox.setValue("Daily");
 
         timeComboBox.getItems().addAll("Morning", "Noon", "Evening");
@@ -351,6 +351,9 @@ public class BBoost extends Application {
 
         // Set delay based on the frequency selected
         switch (currentFrequency) {
+	        case "Minute":
+	            delayMillis = 60 * 1000; // 7 days
+	            break;
             case "Weekly":
                 delayMillis = 7 * 24 * 60 * 60 * 1000; // 7 days
                 break;
@@ -388,16 +391,19 @@ public class BBoost extends Application {
             saveAffirmation(affirmation);
             updateAffirmationTab();
             popup.close();
-           
         });
+        heartIcon.setOnMousePressed(e -> e.consume());
+        heartIcon.setOnMouseDragged(e -> e.consume());
+
+       
 
         Image closeImage = new Image(getClass().getResourceAsStream("/images/Close.png"));
         ImageView closeIcon = new ImageView(closeImage);
-        closeIcon.setFitWidth(24); closeIcon.setFitHeight(24);
         closeIcon.setOnMouseClicked(e -> {
             popup.close();
-      
         });
+        closeIcon.setOnMousePressed(e -> e.consume());
+        closeIcon.setOnMouseDragged(e -> e.consume());
 
         HBox icons = new HBox(10, heartIcon, new Region(), new Region(), closeIcon);
         HBox.setHgrow(icons.getChildren().get(1), Priority.ALWAYS);
