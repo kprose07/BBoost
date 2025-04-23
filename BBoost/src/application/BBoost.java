@@ -17,10 +17,14 @@ import javafx.stage.StageStyle;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import javafx.scene.Cursor;
-
+import java.util.Date;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import javafx.geometry.Insets;
 
 public class BBoost extends Application {
     private final Random random = new Random();
@@ -38,7 +42,12 @@ public class BBoost extends Application {
     private ComboBox<String> timeComboBox = new ComboBox<>();
     private ComboBox<String> colorComboBox = new ComboBox<>();
     private Tab preferencesTab;
+
     private String moodSelected = null;
+    private VBox journalTemplatesVBox = new VBox(10);
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private Map<String, List<String>> journalTemplates = new HashMap<>();
+
 
     private final List<Runnable> popupSequence = new ArrayList<>();
     private int popupIndex = 0;
@@ -104,7 +113,15 @@ public class BBoost extends Application {
 
             VBox affirmationLayout = new VBox(10, clearAffirmationsButton, affirmationVBox);
             VBox checkInLayout = new VBox(10, clearCheckInsButton, checkInVBox);
-            VBox journalLayout = new VBox(10, clearJournalsButton, journalVBox);
+            //VBox journalLayout = new VBox(10, clearJournalsButton,journalVBox, new Label("Journal Templates:"), journalTemplatesVBox);
+            ScrollPane journalScrollPane = new ScrollPane(journalVBox);
+            journalScrollPane.setFitToWidth(true);
+            journalScrollPane.setPadding(new Insets(10));
+
+            VBox journalLayout = new VBox(10, clearJournalsButton, journalScrollPane, new Label("Journal Templates:"), journalTemplatesVBox);
+            journalLayout.setPadding(new Insets(10));
+
+            journalTab.setContent(journalLayout);
 
             notesTab.setContent(affirmationLayout);
             checkInTab.setContent(checkInLayout);
@@ -127,6 +144,9 @@ public class BBoost extends Application {
             updateCheckInTab();
             updateJournalTab();
             updateAffirmationTab();
+            initializeJournalTemplates();
+            loadJournalTemplates();
+
 
             
         
@@ -184,10 +204,10 @@ public class BBoost extends Application {
         refreshButton.setOnAction(e -> {
             affirmationCountLabel.setText("Total Affirmations: " + countLinesInFile(AFFIRMATIONS_FILE));
             checkInCountLabel.setText("Total Check-Ins: " + countLinesInFile(CHECKINS_FILE));
-            journalCountLabel.setText("Total Journals: " + countLinesInFile(JOURNALS_FILE));
+            journalCountLabel.setText("Total Journals: " + countJournalEntries(JOURNALS_FILE));
 
             lastMoodLabel.setText("Latest Mood: " + getLastLineFromFile(CHECKINS_FILE));
-            lastJournalLabel.setText("Latest Journal: " + getLastLineFromFile(JOURNALS_FILE));
+            //lastJournalLabel.setText("Latest Journal: " + getLastJournalTitle(JOURNALS_FILE));
         });
 
         refreshButton.fire();
@@ -210,6 +230,20 @@ public class BBoost extends Application {
         } catch (IOException e) {
             return 0;
         }
+    }
+    private int countJournalEntries(String filename) {
+        int count = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("----- Journal Entry")) {
+                    count++;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 
     private String getLastLineFromFile(String fileName) {
@@ -328,25 +362,17 @@ public class BBoost extends Application {
                 break;
         }
 
-        // Trigger the first set of popups immediately
-        Platform.runLater(this::showPopupsInSequence);
-
+      
         // Schedule the cycle to repeat based on the frequency
         Timeline repeatCycle = new Timeline(
-            new KeyFrame(Duration.millis(delayMillis), event -> showPopupsInSequence())
+            new KeyFrame(Duration.millis(delayMillis), event -> showAffirmationPopup())
         );
         repeatCycle.setCycleCount(Timeline.INDEFINITE);
         repeatCycle.play();
     }
     
 
-
-    private void showPopupsInSequence() {
-        // Show the first popup in the sequence
-        showAffirmationPopup(() -> showCheckInPopup(() -> showJournalPopup(() -> {})));
-    }
-
-    private void showAffirmationPopup(Runnable onClose) {
+    private void showAffirmationPopup() {
         Stage popup = new Stage();
         popup.initStyle(StageStyle.UNDECORATED);
 
@@ -362,7 +388,7 @@ public class BBoost extends Application {
             saveAffirmation(affirmation);
             updateAffirmationTab();
             popup.close();
-            onClose.run();
+           
         });
 
         Image closeImage = new Image(getClass().getResourceAsStream("/images/Close.png"));
@@ -370,7 +396,7 @@ public class BBoost extends Application {
         closeIcon.setFitWidth(24); closeIcon.setFitHeight(24);
         closeIcon.setOnMouseClicked(e -> {
             popup.close();
-            onClose.run();
+      
         });
 
         HBox icons = new HBox(10, heartIcon, new Region(), new Region(), closeIcon);
@@ -391,7 +417,7 @@ public class BBoost extends Application {
         popup.setScene(scene);
         popup.show();
     }
-    private void showCheckInPopup(Runnable onClose) {
+    private void showCheckInPopup() {
         Stage popup = new Stage();
         popup.initStyle(StageStyle.UNDECORATED);
 
@@ -399,7 +425,7 @@ public class BBoost extends Application {
             saveCheckIn(moodSelected);
             updateCheckInTab();
             popup.close();
-            onClose.run();
+
         });
 
         // Close button in the top right
@@ -407,7 +433,7 @@ public class BBoost extends Application {
         closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px;");
         closeButton.setOnAction(e -> {
             popup.close();
-            onClose.run();
+           
         });
 
         HBox topBar = new HBox();
@@ -439,7 +465,7 @@ public class BBoost extends Application {
     private VBox createCheckInContent(Runnable onClose) {
         VBox vbox = new VBox(15);
         vbox.setAlignment(Pos.TOP_CENTER);
-       vbox.getStyleClass().add("checkin-popup");
+       vbox.getStyleClass().add("checkin-popupW");
         
         Label titleLabel = new Label("Daily Check-In");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
@@ -473,8 +499,6 @@ public class BBoost extends Application {
 
             moodBox.setOnMouseClicked(e -> {
                 moodSelected = mood;
-                saveCheckIn(mood);
-                updateCheckInTab();
                 if (onClose != null) onClose.run();
             });
 
@@ -489,34 +513,89 @@ public class BBoost extends Application {
     private static class Delta {
         double x, y;
     }
+    private void initializeJournalTemplates() {
+        journalTemplates.put("Instant Cheer Up", Arrays.asList(
+                "What are you grateful for?",
+                "What did you enjoy today?",
+                "What are you planning for the future?",
+                "What do people like about you?",
+                "Write down a compliment you’d give to yourself.",
+                "What’s one thing that always brings you joy, no matter how small?",
+                "Write about a time when you laughed so hard it hurt. What made it so funny?",
+                "What compliments do you like to receive from others?"
+        ));
 
-    private void showJournalPopup(Runnable onClose) {
-        Stage popup = new Stage();
-        VBox vbox = new VBox(10);
-        Label label = new Label("How are you feeling today?");
-        TextArea textArea = new TextArea();
-        Button saveButton = new Button("Save Journal");
+        journalTemplates.put("Gratitude Entry", Arrays.asList(
+                "List three things that you are grateful for:",
+                "When was the last time you gave to someone that in turn made you feel grateful?"
+        ));
 
-        saveButton.setOnAction(e -> {
-            String journalText = textArea.getText().trim();
-            if (!journalText.isEmpty()) {
-                saveJournal(journalText);
-                updateJournalTab();
-            }
+        journalTemplates.put("Morning Reflection", Arrays.asList(
+                "How do you feel?",
+                "Why do you feel this way?",
+                "What will you do today?",
+                "What are you looking forward to?",
+                "What is one easy task that you'd like to accomplish today?",
+                "Take 10 minutes to meditate!",
+                "Write about the dream you had last night!"
+        ));
 
-            popup.close(); // Close the popup after saving
-            onClose.run(); // Continue to next popup or complete sequence
-        });
-
-
-        vbox.getChildren().addAll(label, textArea, saveButton);
-        Scene scene = new Scene(vbox, 300, 250);
-        popup.setScene(scene);
-        popup.setTitle("Journal Entry");
-        popup.show();
+        journalTemplates.put("Letting Go of Worries", Arrays.asList(
+                "What worries you?",
+                "How would an outsider see it?",
+                "What can be the positive outcome?",
+                "What are some things you can let go of that aren't helping you?"
+        ));
     }
 
+    private void loadJournalTemplates() {
+        journalTemplatesVBox.getChildren().clear();
+        for (Map.Entry<String, List<String>> entry : journalTemplates.entrySet()) {
+            String templateName = entry.getKey();
+            List<String> questions = entry.getValue();
 
+            Button templateButton = new Button(templateName);
+            templateButton.setOnAction(e -> showJournalTemplatePopup(templateName, questions));
+            journalTemplatesVBox.getChildren().add(templateButton);
+        }
+    }
+
+    private void showJournalTemplatePopup(String title, List<String> questions) {
+        Stage popup = new Stage();
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(10));
+
+        Label titleLabel = new Label(title);
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        vbox.getChildren().add(titleLabel);
+
+        List<TextArea> textAreas = new ArrayList<>();
+
+        for (String question : questions) {
+            Label questionLabel = new Label(question);
+            TextArea answerArea = new TextArea();
+            answerArea.setWrapText(true);
+            vbox.getChildren().addAll(questionLabel, answerArea);
+            textAreas.add(answerArea);
+        }
+
+        Button saveButton = new Button("Save Journal");
+        saveButton.setOnAction(e -> {
+            StringBuilder entry = new StringBuilder(title + ":\n");
+            for (int i = 0; i < questions.size(); i++) {
+                entry.append(questions.get(i)).append("\n").append(textAreas.get(i).getText()).append("\n\n");
+            }
+            saveJournal(entry.toString().trim());
+            updateJournalTab();
+            popup.close();
+        });
+
+        vbox.getChildren().add(saveButton);
+        Scene scene = new Scene(new ScrollPane(vbox), 400, 500);
+        popup.setScene(scene);
+        popup.setTitle(title);
+        popup.show();
+    }
     private String getRandomAffirmation() {
         String[] affirmations = {
             "You are beautiful!", "You are fabulous!", "Be who you are!",
@@ -536,7 +615,15 @@ public class BBoost extends Application {
     }
 
     private void saveJournal(String entry) {
-        saveToFile(JOURNALS_FILE, "Journal Entry: " + entry);
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a").format(new Date());
+        String[] lines = entry.split("\n", 2);
+        String title = lines.length > 0 ? lines[0] : "Untitled";
+        String content = lines.length > 1 ? lines[1] : "";
+
+        String formatted = "----- Journal Entry -----\nTitle: " + title +
+                "\nTime: " + timestamp + "\n" + content.trim() + "\n---------------------------\n";
+
+        saveToFile(JOURNALS_FILE, formatted);
     }
 
     private void saveToFile(String filename, String content) {
@@ -551,26 +638,124 @@ public class BBoost extends Application {
     }
     // Load check-in tab with same style
     private void updateCheckInTab() {
-        checkInVBox.getChildren().setAll(createCheckInContent(null)); // no close callback needed for tab
+        Platform.runLater(() -> {
+            checkInVBox.getChildren().clear();
+
+            Button checkInButton = new Button("Check In");
+            checkInButton.getStyleClass().add("button");
+            checkInButton.setOnAction(e -> showCheckInPopup());
+
+            checkInVBox.getChildren().add(checkInButton);
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(CHECKINS_FILE))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    Label entryLabel = new Label(line);
+                    entryLabel.getStyleClass().add("saved-checkin-label");
+                    checkInVBox.getChildren().add(entryLabel);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
-//    private void updateCheckInTab() {
-//        updateTab(CHECKINS_FILE, checkInVBox);
-//    }
 
     private void updateJournalTab() {
-        updateTab(JOURNALS_FILE, journalVBox);
+        Platform.runLater(() -> {
+            journalVBox.getChildren().clear();
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(JOURNALS_FILE))) {
+                String line;
+                StringBuilder entryBuilder = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("----- Journal Entry")) {
+                        if (entryBuilder.length() > 0) {
+                            createJournalEntryButton(entryBuilder.toString().trim());
+                            entryBuilder.setLength(0);
+                        }
+                    }
+                    entryBuilder.append(line).append("\n");
+                }
+                if (entryBuilder.length() > 0) {
+                    createJournalEntryButton(entryBuilder.toString().trim());
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
+    private void createJournalEntryButton(String entryText) {
+        String title = "Journal Entry";
+        String time = "";
+
+        for (String line : entryText.split("\n")) {
+            if (line.startsWith("Title:")) {
+                title = line.substring(6).trim();
+            } else if (line.startsWith("Time:")) {
+                time = line.substring(5).trim();
+            }
+        }
+
+        Button entryButton = new Button(title + " (" + time + ")");
+        entryButton.setMaxWidth(Double.MAX_VALUE);
+        entryButton.setWrapText(true);
+        entryButton.getStyleClass().add("jbtn");
+        entryButton.setOnAction(e -> showJournalPopup(entryText));
+
+        journalVBox.getChildren().add(entryButton);
+    }
+    private void showJournalPopup(String entryText) {
+        Stage popup = new Stage();
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(10));
+
+        Label label = new Label(entryText);
+        label.setWrapText(true);
+
+        ScrollPane scrollPane = new ScrollPane(label);
+        scrollPane.setFitToWidth(true);
+
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(e -> popup.close());
+
+        vbox.getChildren().addAll(scrollPane, closeButton);
+
+        Scene scene = new Scene(vbox, 400, 500);
+        popup.setTitle("Journal Entry");
+        popup.setScene(scene);
+        popup.show();
+    }
+
 
     private void updateTab(String filename, VBox vbox) {
         Platform.runLater(() -> {
             vbox.getChildren().clear();
             try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+                StringBuilder entryBuilder = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    Label entryLabel = new Label(line);
+                    if (line.startsWith("----- Journal Entry")) {
+                        // When we hit a new entry, flush the previous one
+                        if (entryBuilder.length() > 0) {
+                            Label entryLabel = new Label(entryBuilder.toString().trim());
+                            entryLabel.getStyleClass().add("saved-checkin-label");
+                            entryLabel.setWrapText(true);
+                            vbox.getChildren().add(entryLabel);
+                            entryBuilder.setLength(0); // Reset for new entry
+                        }
+                    }
+                    entryBuilder.append(line).append("\n");
+                }
+
+                // Add the last journal entry if any
+                if (entryBuilder.length() > 0) {
+                    Label entryLabel = new Label(entryBuilder.toString().trim());
                     entryLabel.getStyleClass().add("saved-checkin-label");
+                    entryLabel.setWrapText(true);
                     vbox.getChildren().add(entryLabel);
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -587,7 +772,4 @@ public class BBoost extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
-
-
 }
