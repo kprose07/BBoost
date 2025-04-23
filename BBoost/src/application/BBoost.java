@@ -16,6 +16,7 @@ import javafx.geometry.Pos;
 import javafx.stage.StageStyle;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import javafx.scene.Cursor;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -37,6 +38,7 @@ public class BBoost extends Application {
     private ComboBox<String> timeComboBox = new ComboBox<>();
     private ComboBox<String> colorComboBox = new ComboBox<>();
     private Tab preferencesTab;
+    private String moodSelected = null;
 
     private final List<Runnable> popupSequence = new ArrayList<>();
     private int popupIndex = 0;
@@ -389,27 +391,65 @@ public class BBoost extends Application {
         popup.setScene(scene);
         popup.show();
     }
-
     private void showCheckInPopup(Runnable onClose) {
         Stage popup = new Stage();
         popup.initStyle(StageStyle.UNDECORATED);
 
+        VBox content = createCheckInContent(() -> {
+            saveCheckIn(moodSelected);
+            updateCheckInTab();
+            popup.close();
+            onClose.run();
+        });
+
+        // Close button in the top right
+        Button closeButton = new Button("✕");
+        closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px;");
+        closeButton.setOnAction(e -> {
+            popup.close();
+            onClose.run();
+        });
+
+        HBox topBar = new HBox();
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        topBar.getChildren().addAll(spacer, closeButton);
+        topBar.setAlignment(Pos.CENTER_RIGHT);
+        topBar.setPadding(new Insets(5, 10, 0, 0));
+
+        VBox wrapper = new VBox(topBar, content);
+        wrapper.getStyleClass().add("checkin-popup");
+ 
+        // Drag support
+        final Delta drag = new Delta();
+        wrapper.setOnMousePressed(e -> {
+            drag.x = e.getSceneX();
+            drag.y = e.getSceneY();
+        });
+        wrapper.setOnMouseDragged(e -> {
+            popup.setX(e.getScreenX() - drag.x);
+            popup.setY(e.getScreenY() - drag.y);
+        });
+
+        Scene scene = new Scene(wrapper, 360, 220);
+        scene.getStylesheets().add(getClass().getResource("/styles/index.css").toExternalForm());
+        popup.setScene(scene);
+        popup.show();
+    }
+    private VBox createCheckInContent(Runnable onClose) {
         VBox vbox = new VBox(15);
-        vbox.setPadding(new Insets(15));
         vbox.setAlignment(Pos.TOP_CENTER);
-        vbox.getStyleClass().add("checkin-popup");
-
-        // Title
+       vbox.getStyleClass().add("checkin-popup");
+        
         Label titleLabel = new Label("Daily Check-In");
-        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        // Date
         Label dateLabel = new Label(LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy")));
-        dateLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: gray;");
+        dateLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #777;");
 
-        // Mood buttons as images
-        HBox emojiRow = new HBox(10);
+        HBox emojiRow = new HBox(12);
         emojiRow.setAlignment(Pos.CENTER);
+        emojiRow.setPadding(new Insets(10));
 
         String[] moods = {"Excited", "Happy", "Neutral", "Sad", "Tired"};
         String[] imageFiles = {"/images/excited.png", "/images/happy.png", "/images/neutral.png", "/images/sad.png", "/images/tired.png"};
@@ -417,58 +457,35 @@ public class BBoost extends Application {
 
         for (int i = 0; i < moods.length; i++) {
             String mood = moods[i];
-            String color = borderColors[i];
+            String borderColor = borderColors[i];
 
             ImageView imageView = new ImageView(new Image(getClass().getResourceAsStream(imageFiles[i])));
-            imageView.setFitWidth(50);
-            imageView.setFitHeight(50);
+            imageView.setFitWidth(45);
+            imageView.setFitHeight(45);
 
-            StackPane imageButton = new StackPane(imageView);
-            imageButton.setPadding(new Insets(5));
-            imageButton.setStyle("-fx-background-radius: 50%; -fx-cursor: hand;");
-            int index = i;
+            StackPane moodBox = new StackPane(imageView);
+            moodBox.setPadding(new Insets(6));
+            moodBox.setCursor(Cursor.HAND);
+            moodBox.setStyle("-fx-background-radius: 10px;" +
+                (mood.equals(moodSelected)
+                    ? "-fx-border-color: " + borderColor + "; -fx-border-width: 3; -fx-border-radius: 12;"
+                    : "-fx-border-color: transparent;"));
 
-            imageButton.setOnMouseClicked(e -> {
+            moodBox.setOnMouseClicked(e -> {
+                moodSelected = mood;
                 saveCheckIn(mood);
                 updateCheckInTab();
-                popup.close();
-                onClose.run();
+                if (onClose != null) onClose.run();
             });
 
-            emojiRow.getChildren().add(imageButton);
+            emojiRow.getChildren().add(moodBox);
         }
 
-        // Close Button
-        Button closeButton = new Button("✕");
-        closeButton.setStyle("-fx-background-color: transparent; -fx-font-size: 18px;");
-        closeButton.setOnAction(e -> {
-            popup.close();
-            onClose.run();
-        });
-
-        StackPane closeWrapper = new StackPane(closeButton);
-        closeWrapper.setAlignment(Pos.TOP_RIGHT);
-
-        vbox.getChildren().addAll(closeWrapper, titleLabel, dateLabel, emojiRow);
-
-        // Add draggable functionality
-        final Delta drag = new Delta();
-        vbox.setOnMousePressed(e -> {
-            drag.x = e.getSceneX();
-            drag.y = e.getSceneY();
-        });
-        vbox.setOnMouseDragged(e -> {
-            popup.setX(e.getScreenX() - drag.x);
-            popup.setY(e.getScreenY() - drag.y);
-        });
-
-        Scene scene = new Scene(vbox, 360, 200);
-        scene.getStylesheets().add(getClass().getResource("/styles/index.css").toExternalForm());
-
-        popup.setScene(scene);
-        popup.show();
+        vbox.getChildren().addAll(titleLabel, dateLabel, emojiRow);
+        return vbox;
     }
 
+ 
     private static class Delta {
         double x, y;
     }
@@ -532,10 +549,13 @@ public class BBoost extends Application {
     private void updateAffirmationTab() {
         updateTab(AFFIRMATIONS_FILE, affirmationVBox);
     }
-
+    // Load check-in tab with same style
     private void updateCheckInTab() {
-        updateTab(CHECKINS_FILE, checkInVBox);
+        checkInVBox.getChildren().setAll(createCheckInContent(null)); // no close callback needed for tab
     }
+//    private void updateCheckInTab() {
+//        updateTab(CHECKINS_FILE, checkInVBox);
+//    }
 
     private void updateJournalTab() {
         updateTab(JOURNALS_FILE, journalVBox);
