@@ -1,6 +1,6 @@
 # BB Boost - JavaFX Desktop App
 
-![BB Boost Logo](BBoost/src/images/icon.png)
+![BB Boost Logo](BBoost/src/images/BBoost.png)
 
 ## Overview
 
