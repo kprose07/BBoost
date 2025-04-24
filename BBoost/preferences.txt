@@ -1,0 +1,3 @@
+Frequency=Minute
+Time=Morning
+Color=Purple
