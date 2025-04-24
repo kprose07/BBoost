@@ -1,0 +1,9 @@
+Journal Entry:  | Time: 2025-04-14 12:26:58 PM
+Journal Entry: happy | Time: 2025-04-14 12:26:59 PM
+Journal Entry:  | Time: 2025-04-14 12:37:18 PM
+Journal Entry: tired
+ | Time: 2025-04-14 12:39:10 PM
+Journal Entry: tired | Time: 2025-04-14 12:39:41 PM
+Journal Entry: good | Time: 2025-04-23 09:28:01 PM
+Journal Entry: goood | Time: 2025-04-23 09:29:32 PM
+Journal Entry: good | Time: 2025-04-23 09:56:50 PM
